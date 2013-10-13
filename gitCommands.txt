@@ -1,0 +1,31 @@
+
+To pull origin master (do every time before you make changes/login):
+
+git pull origin master
+
+Then to add files:
+
+git add name_of_file/folder
+git commit -m 'message of commit goes here'
+git push
+
+
+
+
+Link to set up:
+
+https://help.github.com/articles/generating-ssh-keys
+
+Then close the repository by doing (should only have to do this once, reccommend doing this in your home directory):
+git clone insert_link_on_github_here
+
+
+then once you clone the repository cd into .git, open the config file and change 
+the https://github.com/...somejunk to ssh://git@github.com/..somejunk
+
+Then cd into ~./ssh and openthe id_rsa.pub file and copy the entire file (the ssh key).
+
+Go into Github's website, go to your account settings, go to SSH Keys on the left and add your ssh key you just copied. 
+
+You should now be able to add files (look above)
+
