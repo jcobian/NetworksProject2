@@ -1,7 +1,7 @@
 /* Jonathan Cobian, Chas Jhin, Jason Wassel 
  * CSE 30264 - Computer Networks 
  * Project 2- Thermal Sensors
- */
+ */  
 
 #include <stdio.h>
 #include <fcntl.h>
