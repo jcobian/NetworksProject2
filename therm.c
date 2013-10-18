@@ -143,18 +143,28 @@ int main(void)
     if(connect(sockfd,(struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
         perror("ERROR connecting");
     }
+	
+	numSensors = htonl(numSensors);
+	
+	if( sendto(sockfd,&numSensors,sizeof(numSensors),0,
+		(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
+		perror("ERROR writing to socket");
+	}
 
+/*
 	//send packet of hosts to server
 	for(i=0;i<numSensors;i++)
 	{
 		//set action to 0 to send
 		hosts[i].action = 0;
 		//here write to server
+		
 		if( sendto(sockfd,&hosts[i],sizeof(hosts[i]),0,
 			(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
 			perror("ERROR writing to socket");
 		}
-    }	
+		
+    }	*/
 		
 	close(sockfd);
 
