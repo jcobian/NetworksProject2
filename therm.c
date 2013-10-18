@@ -144,14 +144,14 @@ int main(void)
         perror("ERROR connecting");
     }
 	
-	numSensors = htonl(numSensors);
+	int send_numSensors = htonl(numSensors);
 	
-	if( sendto(sockfd,&numSensors,sizeof(numSensors),0,
+	if( sendto(sockfd,&send_numSensors,sizeof(send_numSensors),0,
 		(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
 		perror("ERROR writing to socket");
 	}
 
-/*
+
 	//send packet of hosts to server
 	for(i=0;i<numSensors;i++)
 	{
@@ -164,8 +164,8 @@ int main(void)
 			perror("ERROR writing to socket");
 		}
 		
-    }	*/
-		
+    }	
+	
 	close(sockfd);
 
 	return 0;

@@ -18,6 +18,9 @@
 #include <iostream>
 #include <fstream>
 #include <mhash.h>
+#include "therm.h"
+
+#define DEBUG
 
 using namespace std;
 
@@ -66,25 +69,39 @@ int main(int argc, char**argv)
 		//
 
 		//Receive the num of sensors 
-		int num_sensors = 0;
-		n = recvfrom(connfd, &num_sensors, sizeof(num_sensors),0,(struct sockaddr*)&cliaddr,&clilen);
+		int numSensors = 0;
+		n = recvfrom(connfd, &numSensors, sizeof(numSensors),0,(struct sockaddr*)&cliaddr,&clilen);
 		if (n < 0) {
 			perror("ERROR reading from socket");
 			exit(1);
 		}
 
-		num_sensors = ntohl(num_sensors);
-		printf("\tnum of sensors:%d\n",num_sensors);
-/*
-		//Receive the file name
-		char file_name[100]; //originally this was of size [file_name_length] but it was causing null pointer issues so alas...
-		bzero(file_name,sizeof(file_name));
-		n = recvfrom(connfd, file_name, file_name_length,0,(struct sockaddr*)&cliaddr,&clilen);
-		if (n < 0) {
-			perror("ERROR reading from socket");
-			exit(1);
+		numSensors = ntohl(numSensors);
+		printf("\tnum of sensors:%d\n",numSensors);
+
+		Host hosts[numSensors];
+
+		for(int i=0; i<numSensors;i++) {
+			//Receive the host
+			n = recvfrom(connfd, &hosts[i], sizeof(Host),0,(struct sockaddr*)&cliaddr,&clilen);
+			if (n < 0) {
+				perror("ERROR reading from socket");
+				exit(1);
+			}
 		}
-*/
+
+		for(int i=0; i<numSensors; i++) {
+			#ifdef DEBUG
+			printf("Host %i\n",i);
+			printf("\tName: %s\n",hosts[i].hostName);
+			printf("\tNum Thermometers: %d\n",hosts[i].numThermometers);
+			printf("\tSensor Number: %d\n",hosts[i].sensorNumber);
+			printf("\tLow value: %lf\n",hosts[i].lowValue);
+			printf("\tHigh value: %lf\n",hosts[i].highValue);
+			#endif
+            printf("Sensor Data for Host %d is %lf\n",i,hosts[i].sensorData);
+		}
+
 		printf("File Transfer complete!\n");
 	}
 }
