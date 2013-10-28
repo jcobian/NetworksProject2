@@ -100,6 +100,17 @@ int main(int argc, char**argv)
 			printf("\tHigh value: %lf\n",hosts[i].highValue);
 			#endif
             printf("Sensor Data for Host %d is %lf\n",i,hosts[i].sensorData);
+
+			if(hosts[i].action == 0) { //this is a new reading which needs to be stored
+				//JASON Write the hosts[i] to file here
+				//store the data in /var/log/therm/temp_logs/ as follows:
+				//The file name is your group# followed by a space followed by the year followed by an underscore, followed 
+				//by the numeric month, followed by an underscore, followed by the name of the host (i.e.: 
+				///g00_2013_09_student00)
+				//The format of the logfile should be as follows:
+				//Year{space}month{space}day{space}hour{space}minute{space}sensor0_reading{space}sensor1_reading 
+				//for example: 2013 09 30 01 41 67.66 94.37
+			}
 		}
 
 		printf("File Transfer complete!\n");
