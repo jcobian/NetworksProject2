@@ -145,8 +145,8 @@ int main(int argc, char **argv)
 	struct sockaddr_in servaddr;
 	
 	//ip address where server is
-	//char* ap_addr = argv[1];
-	char *ap_addr = "123.4.5.6";
+	char* ap_addr = argv[1];
+	//char *ap_addr = "123.4.5.6";
 	char* port = "9768";
 
 	//create the socket
