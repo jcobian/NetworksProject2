@@ -198,7 +198,8 @@ int main(int argc, char **argv)
     }	
 	
 	close(sockfd);
-
+	fclose(fp);
+	fclose(fpError);
 	return 0;
 } //end main
 
@@ -306,7 +307,8 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 
 	if(sensor==1)
 	*result = (CtoF(((float)temp2.measurement0)*conversion));
-
+	
+	
 	return 0;
 
 }
