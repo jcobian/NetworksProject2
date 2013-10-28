@@ -50,7 +50,8 @@ int main(int argc, char **argv)
 	}
 	if(fp==NULL)
 	{
-		fprintf(fp,"Cannot read file %s. Error: %s",inputFile,strerror(errno));
+		fprintf(fpError,"Cannot read config file %s. Error: %s",inputFile,strerror(errno));
+		exit(1);
 	}
 	char buffer[1024];
 	int numSensors;
@@ -106,24 +107,31 @@ int main(int argc, char **argv)
 	}
 	struct timeval tv;
 	struct tm *tm;
+	time_t rawtime;
 	//load sensor data into structs
 	for(i=0;i<numSensors;i++)
 	{
 		memset((char *)&tv,0,sizeof(tv));
 		memset((char *)&tm,0,sizeof(tm));
+		memset((char *)&rawtime,0,sizeof(rawtime));
 			
 		int sensData;
 		if(readSensorData(i,&sensData,fpError)==0)
 		{
 			//put timestamp in struct
-			gettimeofday(&tv,NULL);
+			time(&rawtime);
+			tm = localtime(&rawtime);
+			/*gettimeofday(&tv,NULL);
 			tm=localtime(&tv.tv_sec);
 			sprintf(hosts[i].timeStamp,"%02d:%02d:%02d.%06d",tm->tm_hour,tm->tm_min,tm->tm_sec,tv.tv_usec);
+			*/
+			strftime(hosts[i].timeStamp,32,"%Y %m %d %H %M",tm);
 			//put sensor data into struct
 			hosts[i].sensorData = sensData;
 			
 			#ifdef DEBUG
 			printf("Sensor Data for Host %d is %lf\n",i,hosts[i].sensorData);
+			printf("Timestamp for Host %d is %s\n",i,hosts[i].timeStamp);
 			#endif
 		}
 		else
@@ -139,12 +147,15 @@ int main(int argc, char **argv)
 	
 	//ip address where server is
 	char* ap_addr = argv[1];
+	//char *ap_addr = "123.4.5.6";
 	char* port = "9768";
 
 	//create the socket
     sockfd=socket(AF_INET,SOCK_STREAM,0);
     if(sockfd < 0) {
+	fprintf(fpError,"Error opening socket\n");
         perror("ERROR opening socket");
+	exit(1);
     }
 
 
@@ -156,14 +167,18 @@ int main(int argc, char **argv)
 
 	//connect
     if(connect(sockfd,(struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+	fprintf(fpError,"Error connecting\n");
         perror("ERROR connecting");
+	exit(1);
     }
 	
 	int send_numSensors = htonl(numSensors);
 	
 	if( sendto(sockfd,&send_numSensors,sizeof(send_numSensors),0,
 		(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
+		fprintf(fpError,"Error writing number of sensors to socket\n");
 		perror("ERROR writing to socket");
+		exit(1);
 	}
 
 
@@ -176,7 +191,9 @@ int main(int argc, char **argv)
 		
 		if( sendto(sockfd,&hosts[i],sizeof(hosts[i]),0,
 			(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
+			fprintf(fpError,"Error writing struct to socket\n");
 			perror("ERROR writing to socket");
+			exit(1);
 		}
 		
     }	
