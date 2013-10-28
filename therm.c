@@ -26,9 +26,14 @@ int readSensorData(int sensor, int *result, FILE* fpError);
 /* Function to convert Celsius to Fahrenheit*/
 float CtoF(float C){return (C*9.0/5.0)+32;}
 
-int main(void)
+int main(int argc, char **argv)
 {
-
+	if(argc!=2)
+	{
+		printf("usage: ./therm <IP address>\n");
+		exit(1);
+	}
+	
 	//get host name
 	char hostname[32];
 	hostname[31] = '\0';
@@ -38,6 +43,15 @@ int main(void)
 	char errorLogFile[1024] = "/var/log/therm/error/g07_error_log";
 	FILE *fp = fopen(inputFile,"r");
 	FILE *fpError = fopen(errorLogFile,"w");
+	if(fpError==NULL)
+	{
+		printf("Error trying to open error file\n");
+		exit(1);
+	}
+	if(fp==NULL)
+	{
+		fprintf(fp,"Cannot read file %s. Error: %s",inputFile,strerror(errno));
+	}
 	char buffer[1024];
 	int numSensors;
 
@@ -122,6 +136,10 @@ int main(void)
 
 	int sockfd, n;
 	struct sockaddr_in servaddr;
+	
+	//ip address where server is
+	char* ap_addr = argv[1];
+	char* port = "9768";
 
 	//create the socket
     sockfd=socket(AF_INET,SOCK_STREAM,0);
@@ -129,9 +147,6 @@ int main(void)
         perror("ERROR opening socket");
     }
 
-	//NOTE: Temp values for testing
-	char* ap_addr = "127.0.0.1";
-	char* port = "9768";
 
 	//build server inet address
     bzero(&servaddr,sizeof(servaddr));
