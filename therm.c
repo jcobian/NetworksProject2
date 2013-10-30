@@ -25,7 +25,7 @@
 int readSensorData(int sensor, int *result, FILE* fpError);
 /* Function to convert Celsius to Fahrenheit*/
 float CtoF(float C){return (C*9.0/5.0)+32;}
-
+void writeErrorLog(FILE *fpError,char *message);
 int main(int argc, char **argv)
 {
 	if(argc!=2)
@@ -34,6 +34,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 	
+
 	//get host name
 	char hostname[32];
 	hostname[31] = '\0';
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
 	char inputFile[1024] = "/etc/t_client/client.conf";
 	char errorLogFile[1024] = "/var/log/therm/error/g07_error_log";
 	FILE *fp = fopen(inputFile,"r");
-	FILE *fpError = fopen(errorLogFile,"w");
+	FILE *fpError = fopen(errorLogFile,"a");
 	if(fpError==NULL)
 	{
 		printf("Error trying to open error file\n");
@@ -50,7 +51,9 @@ int main(int argc, char **argv)
 	}
 	if(fp==NULL)
 	{
-		fprintf(fpError,"Cannot read config file %s. Error: %s",inputFile,strerror(errno));
+		char *message;
+		sprintf(message,"Cannot open config file %s",inputFile);
+		writeErrorLog(fpError,message);
 		exit(1);
 	}
 	char buffer[1024];
@@ -92,7 +95,9 @@ int main(int argc, char **argv)
 			#ifdef DEBUG
 			printf("Error reading %s\n",inputFile);
 			#endif
-			fprintf(fpError,"Error reading input file: %s\n",inputFile);
+			char *message;
+			sprintf(message,"Error reading file %s",inputFile);
+			writeErrorLog(fpError,message);
 			exit(1);
 		}
 		#ifdef DEBUG
@@ -105,13 +110,11 @@ int main(int argc, char **argv)
 		#endif
 		i++;
 	}
-	struct timeval tv;
-	struct tm *tm;
 	time_t rawtime;
+	struct tm *tm;
 	//load sensor data into structs
 	for(i=0;i<numSensors;i++)
 	{
-		memset((char *)&tv,0,sizeof(tv));
 		memset((char *)&tm,0,sizeof(tm));
 		memset((char *)&rawtime,0,sizeof(rawtime));
 			
@@ -121,10 +124,6 @@ int main(int argc, char **argv)
 			//put timestamp in struct
 			time(&rawtime);
 			tm = localtime(&rawtime);
-			/*gettimeofday(&tv,NULL);
-			tm=localtime(&tv.tv_sec);
-			sprintf(hosts[i].timeStamp,"%02d:%02d:%02d.%06d",tm->tm_hour,tm->tm_min,tm->tm_sec,tv.tv_usec);
-			*/
 			strftime(hosts[i].timeStamp,32,"%Y %m %d %H %M",tm);
 			//put sensor data into struct
 			hosts[i].sensorData = sensData;
@@ -153,8 +152,8 @@ int main(int argc, char **argv)
 	//create the socket
     sockfd=socket(AF_INET,SOCK_STREAM,0);
     if(sockfd < 0) {
-	fprintf(fpError,"Error opening socket\n");
-        perror("ERROR opening socket");
+	writeErrorLog(fpError,"Error opening socket");
+	perror("ERROR opening socket");
 	exit(1);
     }
 
@@ -167,7 +166,7 @@ int main(int argc, char **argv)
 
 	//connect
     if(connect(sockfd,(struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
-	fprintf(fpError,"Error connecting\n");
+	writeErrorLog(fpError,"Error connecting");
         perror("ERROR connecting");
 	exit(1);
     }
@@ -176,7 +175,7 @@ int main(int argc, char **argv)
 	
 	if( sendto(sockfd,&send_numSensors,sizeof(send_numSensors),0,
 		(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
-		fprintf(fpError,"Error writing number of sensors to socket\n");
+		writeErrorLog(fpError,"Error writing number of sensors socket");
 		perror("ERROR writing to socket");
 		exit(1);
 	}
@@ -191,7 +190,7 @@ int main(int argc, char **argv)
 		
 		if( sendto(sockfd,&hosts[i],sizeof(hosts[i]),0,
 			(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
-			fprintf(fpError,"Error writing struct to socket\n");
+			writeErrorLog(fpError,"Error writing struct socket");
 			perror("ERROR writing to socket");
 			exit(1);
 		}
@@ -199,7 +198,8 @@ int main(int argc, char **argv)
     }	
 	
 	close(sockfd);
-
+	fclose(fp);
+	fclose(fpError);
 	return 0;
 } //end main
 
@@ -234,7 +234,9 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 		{
 		   if(mknod(fileName,S_IFCHR|S_IRUSR|S_IWUSR|S_IRGRP |S_IWGRP|S_IROTH|S_IWOTH,makedev(180,176)))
 		   {
-			  fprintf(fpError,"Cannot creat device %s  need to be root",fileName);
+			char *message;
+			sprintf(message,"Cannot create device %s need to be root",fileName);
+			writeErrorLog(fpError,message);
 			  return 1; 
 		   }
 		}
@@ -245,7 +247,9 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 		{
 		   if(mknod(fileName2,S_IFCHR|S_IRUSR|S_IWUSR|S_IRGRP |S_IWGRP|S_IROTH|S_IWOTH,makedev(180,177)))
 		   {
-			  fprintf(fpError,"Cannot creat device %s  need to be root",fileName2);
+			char *message;
+			sprintf(message,"Cannot create device %s need to be root",fileName2);
+			writeErrorLog(fpError,message);
 			  return 1; 
 		   }
 		}
@@ -255,7 +259,9 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 	{
 		if((fd=open(fileName,O_RDONLY))==-1)
 		{
-		   fprintf(fpError,"Could not read %s\n",fileName);
+			char *message;
+			sprintf(message,"Could not read %s",fileName);
+			writeErrorLog(fpError,message);
 			return 1; 
 		}
 	}
@@ -263,7 +269,9 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 	{
 		if((fd2=open(fileName2,O_RDONLY))==-1)
 		{
-		   fprintf(fpError,"Could not read %s\n",fileName2);
+			char *message;
+			sprintf(message,"Could not read %s",fileName2);
+			writeErrorLog(fpError,message);
 			return 1; 
 		}
 	}
@@ -272,7 +280,9 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 	{
 		if(read(fd,&temp,sizeof(temp))!=8)
 		{
-		   fprintf(fpError,"Error reading %s\n",fileName);
+			char *message;
+			sprintf(message,"Error reading %s",fileName);
+			writeErrorLog(fpError,message);
 			return 1; 
 		}
 	}
@@ -280,7 +290,9 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 	{
 		if(read(fd2,&temp2,sizeof(temp))!=8)
 		{
-		   fprintf(fpError,"Error reading %s\n",fileName2);
+			char *message;
+			sprintf(message,"Error reading %s",fileName2);
+			writeErrorLog(fpError,message);
 			return 1; 
 		}
 	}
@@ -295,10 +307,19 @@ int readSensorData(int sensor, int *result, FILE* fpError)
 
 	if(sensor==1)
 	*result = (CtoF(((float)temp2.measurement0)*conversion));
-
-	//printf("%3.2f %3.2f\n",
-		//(CtoF(((float)temp.measurement0)*conversion)),
-		//(CtoF(((float)temp2.measurement0)*conversion)));
+	
+	
 	return 0;
+
+}
+void writeErrorLog(FILE *fpError,char *message)
+{
+	char errorLogDate[32];
+	time_t rawtime;
+	struct tm *tm;	
+	time(&rawtime);
+	tm = localtime(&rawtime);
+	strftime(errorLogDate,32,"%Y %m %d %H %M",tm);
+	fprintf(fpError,"%s %s\n",errorLogDate,message);
 
 }
