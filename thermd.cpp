@@ -159,6 +159,7 @@ void *accept_client(void *input) {
 		}
 		else if(hosts[i].action == 1) { //the client wants update data back
 			int error_msg = 0;
+			printf("Sensor Data: %lf, %lf", hosts[i].sensorData,hosts[i].highValue);
 			if(hosts[i].sensorData>hosts[i].highValue) { //if overtemp condition
 				error_msg = 1;
 			}
