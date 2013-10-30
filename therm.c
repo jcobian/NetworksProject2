@@ -26,6 +26,59 @@ int readSensorData(int sensor, int *result, FILE* fpError);
 /* Function to convert Celsius to Fahrenheit*/
 float CtoF(float C){return (C*9.0/5.0)+32;}
 void writeErrorLog(FILE *fpError,char *message);
+void sendHostToServer(int *sockfd,struct sockaddr_in *servaddr,FILE *fpError, Host *host)
+{
+	
+	if( sendto((*sockfd),&(*host).hostName,sizeof((*host).hostName),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).numThermometers,sizeof((*host).numThermometers),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).sensorNumber,sizeof((*host).sensorNumber),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).sensorData,sizeof((*host).sensorData),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).lowValue,sizeof((*host).lowValue),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).highValue,sizeof((*host).highValue),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).timeStamp,sizeof((*host).timeStamp),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+	if( sendto((*sockfd),&(*host).action,sizeof((*host).action),0,
+		(struct sockaddr *) servaddr,sizeof((*servaddr))) < 0) {
+		writeErrorLog(fpError,"Error writing struct socket");
+		perror("ERROR writing to socket");
+		exit(1);
+	}
+		
+}	
 int main(int argc, char **argv)
 {
 	if(argc!=2)
@@ -187,13 +240,14 @@ int main(int argc, char **argv)
 		//set action to 0 to send
 		hosts[i].action = 0;
 		//here write to server
-		
+	/*	
 		if( sendto(sockfd,&hosts[i],sizeof(hosts[i]),0,
 			(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0) {
 			writeErrorLog(fpError,"Error writing struct socket");
 			perror("ERROR writing to socket");
 			exit(1);
-		}
+		}*/
+		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);	
 		
     }	
 	
