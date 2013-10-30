@@ -6,7 +6,7 @@ therm.o: therm.c therm.h
 	gcc -c therm.c
 
 thermd: thermd.o
-	g++ thermd.o -o thermd
+	g++ -pthread thermd.o -o thermd
 thermd.o: thermd.cpp therm.h
 	g++ -pthread -c thermd.cpp -Wall
 

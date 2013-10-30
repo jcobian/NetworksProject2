@@ -17,7 +17,6 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#include <mhash.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <sstream>
@@ -40,7 +39,8 @@ typedef struct {
 //function run by thread upon accepting a new client connection
 void *accept_client(void *input) {
 
-	thread_info* info = input;
+	thread_info* info = (thread_info*)input;
+
 	printf("New client accepted!\n");
 	printf("\tNew client address:%s\n",inet_ntoa(info->cliaddr.sin_addr));
 	printf("\tClient port:%d\n",info->cliaddr.sin_port);
@@ -144,7 +144,7 @@ int main(int argc, char**argv)
 	////////////////////////////////////
 	// Setup and Connection 
 	// 
-	int sockfd,connfd,n;
+	int sockfd;
 	struct sockaddr_in servaddr;
 
 	//create the socket
@@ -177,7 +177,8 @@ int main(int argc, char**argv)
 		info.connfd = accept(sockfd,(struct sockaddr *)&info.cliaddr,&info.clilen);
 
 		//spawn a new thread to handle the connection
-		int status = pthread_create(NULL, NULL, accept_client, &info);
+		pthread_t thread;
+		int status = pthread_create(&thread, NULL, accept_client, &info);
 
 		if(status) 
 			printf("error creating thread: %i\n", status);
