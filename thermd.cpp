@@ -18,11 +18,14 @@
 #include <iostream>
 #include <fstream>
 #include <mhash.h>
+#include <pthread.h>
 #include "therm.h"
 
 #define DEBUG
 
 using namespace std;
+
+pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char**argv)
 {
@@ -60,6 +63,16 @@ int main(int argc, char**argv)
 	while(1) {
 		clilen = sizeof(cliaddr);
 		connfd = accept(sockfd,(struct sockaddr *)&cliaddr,&clilen);
+/*
+		//new thread here
+		int status = pthread_create(NULL, NULL, accept_client, &thread_info_array[i]);
+
+		//TODO create a function called "*accept_client", and move all below code there
+
+		if(status) 
+			printf("error creating thread: %i\n", status);
+		else
+			printf("Thread created\n");*/
 
 		printf("New client accepted!\n");
 		printf("\tNew client address:%s\n",inet_ntoa(cliaddr.sin_addr));

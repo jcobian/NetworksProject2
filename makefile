@@ -8,7 +8,7 @@ therm.o: therm.c therm.h
 thermd: thermd.o
 	g++ thermd.o -o thermd
 thermd.o: thermd.cpp therm.h
-	g++ -c thermd.cpp
+	g++ -pthread -c thermd.cpp -Wall
 
 clean:
 	rm -f core* *.o *~ therm thermd
