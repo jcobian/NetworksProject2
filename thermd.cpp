@@ -136,6 +136,8 @@ void *accept_client(void *input) {
 	
 	printf("File Transfer complete!\n");
 
+	close(info->connfd);
+
 	return 0;
 }
 
