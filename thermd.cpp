@@ -160,14 +160,24 @@ int main(int argc, char**argv)
 	bzero(&servaddr,sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
-
 	int s_port = 9768;
-
 	servaddr.sin_port=htons(s_port);
 
+	int val = 1;
+	if(	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val))==-1)
+		perror("setsockopt failed");
+		exit(1);
+	}
+
 	//bind to port
-	bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
-	listen(sockfd,1024);
+	if(	bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr))<0) {
+		perror("bind failed");
+		exit(1);
+	}
+	if(	listen(sockfd,1024) <0 ) {
+		perror("listen failed");
+		exit(1);
+	}
 
 	////////////////////////////////////
 	// Listen to Port
