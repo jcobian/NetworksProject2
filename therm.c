@@ -232,14 +232,18 @@ int main(int argc, char **argv)
 		perror("ERROR writing to socket");
 		exit(1);
 	}
-
 	socklen_t servlen = sizeof(servaddr);
+
 	int overTemp = 0; //1 if overheating, 0 if not
 	//send packet of hosts to server
 	for(i=0;i<numSensors;i++)
 	{
-		hosts[i].sensorData = 1000;
-		
+		//hosts[i].sensorData = 1000;
+		//set action to 0 to send
+		hosts[i].action = 0;
+		//here write to server
+		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);
+	/*	
 		//now make action 1 to request for overtemp
 		hosts[i].action = 1;
 		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);	
@@ -265,13 +269,8 @@ int main(int argc, char **argv)
 			}
 			
 		}
-		overTemp = 0;	
-		
-		//set action to 0 to send
-		hosts[i].action = 0;
-		//here write to server
-		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);
-    			
+		overTemp = 0;		
+    	*/		
 	}	
 	
 	close(sockfd);
