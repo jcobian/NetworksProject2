@@ -165,7 +165,7 @@ void *accept_client(void *input) {
 			if(hosts[i].sensorData>hosts[i].highValue) { //if overtemp condition
 				error_msg = 1;
 			}
-			if( sendto(info->connfd, &error_msg, sizeof(error_msg),0,(struct sockaddr*)&(info->cliaddr),(info->clilen))) {
+			if( sendto(info->connfd, &error_msg, sizeof(error_msg),0,(struct sockaddr*)&(info->cliaddr),(info->clilen)) < 0) {
 				perror("Error sending message back to client");
 				exit(1);
 			}
