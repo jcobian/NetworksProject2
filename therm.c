@@ -238,10 +238,7 @@ int main(int argc, char **argv)
 	//send packet of hosts to server
 	for(i=0;i<numSensors;i++)
 	{
-		//set action to 0 to send
-		hosts[i].action = 0;
-		//here write to server
-		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);
+		hosts[i].sensorData = 1000;
 		
 		//now make action 1 to request for overtemp
 		hosts[i].action = 1;
@@ -251,6 +248,7 @@ int main(int argc, char **argv)
 			perror("Error receiving overtemp");
 			exit(1);
 		}
+		printf("Over temp is %d\n",overTemp);
 		//if overtemp, check for a second succesive overtemp
 		if(overTemp==1)
 		{
@@ -262,12 +260,17 @@ int main(int argc, char **argv)
 			}
 			if(overTemp==1)
 			{
-				printf("SYSTEM SHUTDOWN, SENSOR %i IS OVERHEATING\n",i);
+				printf("SYSTEM SHUTDOWN, SENSOR %d IS OVERHEATING\n",i);
 				exit(1);
 			}
 			
 		}
 		overTemp = 0;	
+		
+		//set action to 0 to send
+		hosts[i].action = 0;
+		//here write to server
+		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);
     			
 	}	
 	
