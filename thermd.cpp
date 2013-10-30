@@ -36,6 +36,52 @@ typedef struct {
 
 } thread_info;
 
+void receiveHostFromServer(thread_info* info, Host* host) {
+
+//		n = recvfrom(info->connfd, &hosts[i], sizeof(Host),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen));
+	if(recvfrom(info->connfd, &(host->hostName), sizeof(host->hostName),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->numThermometers), sizeof(host->numThermometers),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->sensorNumber), sizeof(host->sensorNumber),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->sensorData), sizeof(host->sensorData),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->lowValue), sizeof(host->lowValue),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->highValue), sizeof(host->highValue),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->timeStamp), sizeof(host->timeStamp),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+	if(recvfrom(info->connfd, &(host->action), sizeof(host->action),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen)) < 0) {
+		perror("ERROR reading from socket");
+		exit(1);
+	}
+
+
+}
+
 //function run by thread upon accepting a new client connection
 void *accept_client(void *input) {
 
@@ -62,77 +108,61 @@ void *accept_client(void *input) {
 
 	Host hosts[numSensors];
 
+	//receive data and store to buffere hosts
 	for(int i=0; i<numSensors;i++) {
-		//Receive the host
-		n = recvfrom(info->connfd, &hosts[i], sizeof(Host),0,(struct sockaddr*)&(info->cliaddr),&(info->clilen));
-		if (n < 0) {
-			perror("ERROR reading from socket");
-			exit(1);
-		}
-
-		string actionFile = "/var/log/therm/temp_logs/g07_";
-
-		//create file
-		string yearandmonth;
-		yearandmonth=hosts[0].timeStamp;
-		stringstream stream(yearandmonth);
-		string year,month;
-		stream >> year;
-		stream >> month;		
-		actionFile+=year;
-		actionFile+="_";
-		actionFile+=month;
-		actionFile+="_";
-		actionFile+=hosts[0].hostName;
-		const char * file = actionFile.c_str();
-		/*				
-		//read the file here to get the last read sensor data
-		FILE *fp = fopen(actionFile,"r");	
-		char buffer[1024];
-		double sensData1=0,sensData2=0;
-		if(fp!=NULL)
-		{
-		while(fgets(buffer,sizeof(buffer),fp))
-		{
-			int n = sscanf("%d %d %d %d %d %lf %lf",NULL,NULL,NULL,NULL,NULL,&sensData1,&sensData2);
-				
-		}
-		}
-		fclose(fp);*/
-
-		//open or create file
-		FILE *fpAction = fopen(file,"a");
-		int wroteSomething = 0;
-		for(int i=0; i<numSensors; i++) {
-			#ifdef DEBUG
-			printf("Host %i\n",i);
-			printf("\tName: %s\n",hosts[i].hostName);
-			printf("\tNum Thermometers: %d\n",hosts[i].numThermometers);
-			printf("\tSensor Number: %d\n",hosts[i].sensorNumber);
-			printf("\tLow value: %lf\n",hosts[i].lowValue);
-			printf("\tHigh value: %lf\n",hosts[i].highValue);
-			#endif
-			printf("Sensor Data for Host %d is %lf\n",i,hosts[i].sensorData);
-
-			if(hosts[i].action == 0) { //this is a new reading which needs to be stored
-				//print timestamp and sensor reading to file
-				if(i==0)
-				fprintf(fpAction,"%s %.2lf",hosts[i].timeStamp,hosts[i].sensorData);
-				else
-				{
-					fprintf(fpAction," %.2lf",hosts[i].sensorData);
-				
-				}
-				wroteSomething = 1;			
-		
-			}
-		}
-		if(wroteSomething) 
-			fprintf(fpAction,"\n");
-		wroteSomething = 0;	
-		//close file writing
-		fclose(fpAction);
+		//Receive host serialized
+		receiveHostFromServer(info, &hosts[i]);
 	}
+
+	//Now create the file
+	string actionFile = "/var/log/therm/temp_logs/g07_";
+
+	//create file
+	string yearandmonth;
+	yearandmonth=hosts[0].timeStamp;
+	stringstream stream(yearandmonth);
+	string year,month;
+	stream >> year;
+	stream >> month;		
+	actionFile+=year;
+	actionFile+="_";
+	actionFile+=month;
+	actionFile+="_";
+	actionFile+=hosts[0].hostName;
+	const char * file = actionFile.c_str();
+
+	FILE *fpAction = fopen(file,"a");
+	int wroteSomething = 0;
+
+	//Now write the data to file
+	for(int i=0; i<numSensors; i++) {
+
+		#ifdef DEBUG
+		printf("Host %i\n",i);
+		printf("\tName: %s\n",hosts[i].hostName);
+		printf("\tNum Thermometers: %d\n",hosts[i].numThermometers);
+		printf("\tSensor Number: %d\n",hosts[i].sensorNumber);
+		printf("\tLow value: %lf\n",hosts[i].lowValue);
+		printf("\tHigh value: %lf\n",hosts[i].highValue);
+		#endif
+		printf("Sensor Data for Host %d is %lf\n",i,hosts[i].sensorData);
+
+		if(hosts[i].action == 0) { //this is a new reading which needs to be stored
+
+			//print timestamp and sensor reading to file
+			if(i==0)
+				fprintf(fpAction,"%s %.2lf",hosts[i].timeStamp,hosts[i].sensorData);
+			else
+				fprintf(fpAction," %.2lf",hosts[i].sensorData);
+			
+			wroteSomething = 1;			
+		}
+	}
+	if(wroteSomething) 
+		fprintf(fpAction,"\n");
+	wroteSomething = 0;	
+	//close file writing
+	fclose(fpAction);
 	
 	printf("File Transfer complete!\n");
 
@@ -164,7 +194,7 @@ int main(int argc, char**argv)
 	servaddr.sin_port=htons(s_port);
 
 	int val = 1;
-	if(	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val))==-1)
+	if(	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val))==-1) {
 		perror("setsockopt failed");
 		exit(1);
 	}
