@@ -135,7 +135,7 @@ void *accept_client(void *input) {
 	int wroteSomething = 0;
 
 	//Now write the data to file
-	for(int i=0; i<numSensors; i++) {
+	for(int i=0; i<numSensors; ) {
 
 		#ifdef DEBUG
 		printf("Host %i\n",i);
@@ -156,6 +156,8 @@ void *accept_client(void *input) {
 				fprintf(fpAction," %.2lf",hosts[i].sensorData);
 			
 			wroteSomething = 1;			
+
+			i++; //only increment if the sensor was written
 		}
 		else if(hosts[i].action == 1) { //the client wants update data back
 			int error_msg = 0;
