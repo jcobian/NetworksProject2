@@ -1,0 +1,9 @@
+Jonathan Cobian, Charles Jhin, Jason Wassel
+
+Files included:
+therm.c - client code
+therd.cpp - server code
+therm.h - contains structs that the server and client use
+makefile - makefile to create the binaries
+therm- client executable
+thermd- server executable
