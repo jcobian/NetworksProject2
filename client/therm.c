@@ -232,9 +232,7 @@ int main(int argc, char **argv)
 		perror("ERROR writing to socket");
 		exit(1);
 	}
-	socklen_t servlen = sizeof(servaddr);
 
-	int overTemp = 0; //1 if overheating, 0 if not
 	//send packet of hosts to server
 	for(i=0;i<numSensors;i++)
 	{
@@ -243,35 +241,32 @@ int main(int argc, char **argv)
 		hosts[i].action = 0;
 		//here write to server
 		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);
-	/*	
-		//now make action 1 to request for overtemp
+	}	
+
+	//now find out if overtemp so send packets w/ action = 1
+	for(i=0;i<numSensors;i++)
+	{
 		hosts[i].action = 1;
 		sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);	
+	}
+	int overTemp = 0; //1 if overheating
+	socklen_t servlen = sizeof(servaddr);
+	for(i=0;i<numSensors;i++)
+	{
 		if(recvfrom(sockfd,&overTemp,sizeof(overTemp),0,(struct sockaddr*)&servaddr,&servlen)<0)
 		{
 			perror("Error receiving overtemp");
 			exit(1);
 		}
-		printf("Over temp is %d\n",overTemp);
-		//if overtemp, check for a second succesive overtemp
 		if(overTemp==1)
 		{
-			sendHostToServer(&sockfd,&servaddr,fpError,&hosts[i]);	
-			if(recvfrom(sockfd,&overTemp,sizeof(overTemp),0,(struct sockaddr*)&servaddr,&servlen)<0)
-			{
-				perror("Error receiving overtemp");
-				exit(1);
-			}
-			if(overTemp==1)
-			{
-				printf("SYSTEM SHUTDOWN, SENSOR %d IS OVERHEATING\n",i);
-				exit(1);
-			}
-			
+			printf("SYSTEM SHUTDOWN, SENSOR %d IS OVERHEATING\n",i);
+			exit(1);
 		}
-		overTemp = 0;		
-    	*/		
-	}	
+		overTemp = 0;
+		
+	}
+
 	
 	close(sockfd);
 	fclose(fp);

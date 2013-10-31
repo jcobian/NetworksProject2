@@ -22,7 +22,7 @@
 #include <sstream>
 #include "therm.h"
 
-#define DEBUG
+//#define DEBUG
 
 using namespace std;
 
@@ -86,11 +86,11 @@ void receiveHostFromServer(thread_info* info, Host* host) {
 void *accept_client(void *input) {
 
 	thread_info* info = (thread_info*)input;
-
+	#ifdef DEBUG
 	printf("New client accepted!\n");
 	printf("\tNew client address:%s\n",inet_ntoa(info->cliaddr.sin_addr));
 	printf("\tClient port:%d\n",info->cliaddr.sin_port);
-
+	#endif
 	////////////////////////////////////
 	// Receive Server reply
 	//
@@ -104,7 +104,9 @@ void *accept_client(void *input) {
 	}
 
 	numSensors = ntohl(numSensors);
+	#ifdef DEBUG
 	printf("\tnum of sensors:%d\n",numSensors);
+	#endif
 
 	Host hosts[numSensors];
 
@@ -144,8 +146,8 @@ void *accept_client(void *input) {
 		printf("\tSensor Number: %d\n",hosts[i].sensorNumber);
 		printf("\tLow value: %lf\n",hosts[i].lowValue);
 		printf("\tHigh value: %lf\n",hosts[i].highValue);
-		#endif
 		printf("Sensor Data for Host %d is %lf\n",i,hosts[i].sensorData);
+		#endif
 
 		if(hosts[i].action == 0) { //this is a new reading which needs to be stored
 
@@ -157,29 +159,50 @@ void *accept_client(void *input) {
 			
 			wroteSomething = 1;			
 
-//			i++; //only increment if the sensor was written
 		}
-/*
-		else if(hosts[i].action == 1) { //the client wants update data back
-			int error_msg = 0;
-			printf("Sensor Data: %lf, %lf", hosts[i].sensorData,hosts[i].highValue);
-			if(hosts[i].sensorData>hosts[i].highValue) { //if overtemp condition
-				error_msg = 1;
-			}
-			if( sendto(info->connfd, &error_msg, sizeof(error_msg),0,(struct sockaddr*)&(info->cliaddr),(info->clilen)) < 0) {
-				perror("Error sending message back to client");
-				exit(1);
-			}
-		}
-*/
 	}
+
 	if(wroteSomething) 
 		fprintf(fpAction,"\n");
 	wroteSomething = 0;	
 	//close file writing
 	fclose(fpAction);
-	
+	#ifdef DEBUG	
 	printf("File Transfer complete!\n");
+	#endif
+	//receive hosts with action set to 1
+	for(int i=0; i<numSensors;i++) {
+		//Receive host serialized
+		receiveHostFromServer(info, &hosts[i]);
+	}
+	//send overtemp signal
+	int overTemp = 0; //1 means over temperature
+	for(int i=0;i<numSensors;i++)
+	{
+		//client is requesting to know if over temp
+		if(hosts[i].action==1)
+		{
+
+			//if there is an overtemp, set the flag to 1
+			if(hosts[i].sensorData>hosts[i].highValue)
+			{
+				overTemp = 1;
+			}
+		}
+		//send the status to the client
+		if(sendto(info->connfd,&overTemp,sizeof(&overTemp),0,(struct sockaddr *)&(info->cliaddr),info->clilen)<0)
+		{
+			perror("Error writing overtemp to client");
+			exit(1);
+		}
+
+		//reset to 0 for the next host (packet)	
+		overTemp = 0;	
+		
+	}
+
+
+
 
 	close(info->connfd);
 
@@ -237,9 +260,16 @@ int main(int argc, char**argv)
 		pthread_t thread;
 		int status = pthread_create(&thread, NULL, accept_client, &info);
 
-		if(status) 
+		if(status){
+			#ifdef DEBUG 
 			printf("error creating thread: %i\n", status);
-		else
+			#endif
+			exit(1);	
+		}
+		else{
+			#ifdef DEBUG
 			printf("Thread created\n");
+			#endif
+		}
 	}
 }

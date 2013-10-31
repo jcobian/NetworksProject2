@@ -9,3 +9,4 @@ server directory
 	therm.h - contains structs for server
 	makefile
 
+We completed the extra credit that deals with the overtemperature conditions. Our protocol is as follows. First the client sends over the packets with the action flag set to 0 (as normal). Then it sends all of the packets again, this time with the action flag set to 1. Here the server sees that the action flag is 1 and then checks to see if there is an overtemperature. It sends a status to the client telling it whether or not there is an overtemperature. If there is, the client then prints a message to the terminal telling the user they should shutdown and then exits. 

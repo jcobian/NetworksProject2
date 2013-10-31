@@ -1,3 +1,9 @@
+/*
+ *Jonathan Cobian, Charles Jhin, Jason Wassel
+ * structs used
+ * Host is each packet that is sent from the client to the server
+ * packet is used for reading the sensor
+ */
 typedef struct {
 	char hostName[32];
 	int numThermometers; //from config file
